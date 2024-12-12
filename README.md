@@ -15,3 +15,16 @@
 
 
 
+#### 运行
+
+需要ollama和相应模型的环境
+
+```bash
+python main.py
+```
+
+```bash
+cd .\Cat-girl-assistant\
+npm run dev
+```
+
