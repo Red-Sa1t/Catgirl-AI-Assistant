@@ -19,7 +19,7 @@
         <div id="msg_end" style="overflow: hidden;"></div><!-- eslint-disable-line no-undef -->
       </div>
       <div class="input-container">
-        <button @click="clean">
+        <button @click="clear">
           <span class="niceButton"> <img src="./assets/icons8-empty-trash-50.png" class="centered-img" dir="清空对话记录"></span>
         </button>
         <input v-model="userInput" id="customInput" @keyup.enter="fetchStream" placeholder="请输入您的问题" />
@@ -176,11 +176,11 @@
 
     }
 
-    const clean = async ()=> {
+    const clear = async ()=> {
       if(!confirm('确定要清空对话记录吗？')){
         return;
       }
-      const url = 'http://localhost:8000/clean/';
+      const url = 'http://localhost:8000/clear/';
       messages.value = [{ type: 'bot', text: "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" }];
       botResponse.value = '';
       list[listcur.value] = "新对话"

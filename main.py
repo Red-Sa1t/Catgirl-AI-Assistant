@@ -50,8 +50,8 @@ list_list[0].append({
                 "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" 
             })
 chat_data_list = []
-@app.post("/clean/")
-async def clean(message: Message):
+@app.post("/clear/")
+async def clear(message: Message):
     cur=message.cur
     list_list[cur].clear()
     list_list[cur].append({
