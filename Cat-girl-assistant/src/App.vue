@@ -27,17 +27,17 @@
     <div class="chat-viewer">
       <h1 class="bot-text" style="text-align: center; "> 历史对话管理</h1>
       <button @click="newChat">新建</button>
-        <li v-for="(todo, index) in list" :key="index" style="display: flex;">
-          <button @click="del(index)" style="margin-left: 0;padding: 10px;margin-right: 10px;margin-bottom: 10px">删除</button>
+        <li v-for="(content, index) in list" :key="index" style="display: flex;">
+          <button @click="confirmdel(index)" style="margin-left: 0;padding: 10px;margin-right: 10px;margin-bottom: 10px">删除</button>
           <button @click="change(index)" style="margin-right: 0;padding: 10px;margin-right: 10px;margin-bottom: 10px">查看</button>
-          {{ todo }}
+          {{ content }}
         </li>
       </div>
     </div>
 </template>
 
 <script setup>
-    import { ref, reactive} from 'vue';
+    import { ref, reactive, onMounted, watch } from 'vue';
     import { marked } from 'marked';
     import  hljs  from 'highlight.js';
     import 'highlight.js/styles/base16/darcula.css'
@@ -51,9 +51,57 @@
     const listnum = ref(1);
     const listindex = ref(0);
     
-    
+    onMounted(() => {
+      const storedMessages = localStorage.getItem('messages');
+      if (storedMessages) {
+        messages.value = JSON.parse(storedMessages);
+      }
+
+      const storedList = localStorage.getItem('list');
+      if (storedList) {
+        const parsedList = JSON.parse(storedList);
+        list.splice(0, list.length, ...parsedList);
+      }
+
+      const storedListnum = localStorage.getItem('listnum');
+      if (storedListnum) {
+        listnum.value = JSON.parse(storedListnum);
+      } else {
+        listnum.value = 1;
+      }
+
+      const storedListindex = localStorage.getItem('listindex');
+      if (storedListindex) {
+        listindex.value = JSON.parse(storedListindex);
+      } else {
+        listindex.value = 0;
+      }
+
+      if (list.length === 0) {
+        list.push(listnum.value);
+        listnum.value++;
+      }
+      
+    });
     list.push(listnum.value);
-    listnum.value++;
+    
+    watch(messages, (newVal) => {
+      localStorage.setItem('messages', JSON.stringify(newVal));
+    }, { deep: true });
+    
+    watch(() => list, (newVal) => {
+      localStorage.setItem('list', JSON.stringify(newVal));
+      console.log(JSON.stringify(newVal));
+    }, { deep: true });
+    
+    watch(listnum, (newVal) => {
+      localStorage.setItem('listnum', JSON.stringify(newVal));
+    });
+    
+    watch(listindex, (newVal) => {
+      localStorage.setItem('listindex', JSON.stringify(newVal));
+    });
+    
     
     //markdown渲染和代码高光相关
     marked.use(markedHighlight({
@@ -71,7 +119,7 @@
       smartLists: true,
       smartypants: false
     };
-
+    
     
     const fetchStream = async () => {
       const url = 'http://localhost:8000/aichat/';
@@ -114,7 +162,7 @@
     
     const clear = async ()=> {
       const url = 'http://localhost:8000/clear/';
-      messages.value = [{ type: 'bot', text: "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答你的问题喵💕" }];
+      messages.value = [{ type: 'bot', text: "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" }];
       botResponse.value = '';
       await fetch(url, {
         method: 'POST',
@@ -123,6 +171,12 @@
         },
         body: JSON.stringify({ input: userInput.value ,cur: listindex.value }), // 请求数据
       });
+    }
+    
+    const confirmdel = (index)=> {
+      if(confirm('确定要删除这个对话记录吗？')){
+        del(index);
+      }
     }
     
     const del = async (index)=> {
@@ -142,18 +196,19 @@
         if (message.role === 'user') {
           return { type: 'user', text: message.content };
         } else if (message.role === 'assistant') {
-        const renderedText = marked.parse(message.content, options);
-        return { type: 'bot', text: renderedText};
-      }
-      return { type: 'bot', text: message.content }; // 默认处理
-    });
-    messages.value = messagesData;
-    botResponse.value = '';
+          const renderedText = marked.parse(message.content, options);
+          return { type: 'bot', text: renderedText};
+        }
+        return { type: 'bot', text: message.content }; // 默认处理
+      });
+      messages.value = messagesData;
+      botResponse.value = '';
+      listnum.value--;
     }
-
+    
     const newChat = async ()=> {
       const url = 'http://localhost:8000/newChat/';
-      messages.value = [{ type: 'bot', text: "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答你的问题喵💕" }];
+      messages.value = [{ type: 'bot', text: "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" }];
       botResponse.value = '';
       list.push(listnum.value);
       listnum.value++;
@@ -162,7 +217,7 @@
         method: 'GET',
       });
     }
-
+    
     const change = async (index)=> {
       listindex.value = index;
       const url = 'http://localhost:8000/view/';
@@ -179,14 +234,15 @@
         if (message.role === 'user') {
           return { type: 'user', text: message.content };
         } else if (message.role === 'assistant') {
-        const renderedText = marked.parse(message.content, options);
-        return { type: 'bot', text: renderedText};
-      }
-      return { type: 'bot', text: message.content }; // 默认处理
-    });
-    messages.value = messagesData;
-    botResponse.value = '';
-  }
+          const renderedText = marked.parse(message.content, options);
+          return { type: 'bot', text: renderedText};
+        }
+        return { type: 'bot', text: message.content }; // 默认处理
+      });
+      messages.value = messagesData;
+      botResponse.value = '';
+      console.log(list);
+    }
     
     </script>
   

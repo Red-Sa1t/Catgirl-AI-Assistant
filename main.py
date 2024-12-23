@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+import copy
 
 app = FastAPI()
 
@@ -44,7 +45,11 @@ def stream_chat(cur, messages):
 list_list = [[]]
 list_list[0].append({
                 "role": "assistant",
-                "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答你的问题喵💕" 
+                "content": "😸💖主人好喵！我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
+            })
+list_list[0].append({
+                "role": "assistant",
+                "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" 
             })
 chat_data_list = []
 @app.post("/clear/")
@@ -53,29 +58,41 @@ async def clear(message: Message):
     print(cur)
     list_list[cur].clear()
     list_list[cur].append({
-                "role": "assistant",
-                "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答你的问题喵💕" 
-            })
+                    "role": "assistant",
+                    "content": "😸💖主人好喵！我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
+                })
+    list_list[cur].append({
+                    "role": "assistant",
+                    "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" 
+                })
     return
 
 @app.post("/del/")
 async def delete(message: Message):
     cur=message.cur
     del list_list[cur]
-    return list_list[cur]
+    listclone=copy.deepcopy(list_list[cur])
+    listclone.pop(0)
+    return listclone 
 
 @app.get("/newChat/")
 async def newChat():
     list_list.append([{
-                "role": "assistant",
-                "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答你的问题喵💕" 
-            }])
+                    "role": "assistant",
+                    "content": "😸💖主人好喵！我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
+                },{
+                    "role": "assistant",
+                    "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" 
+                }])
+    
     return
     
 @app.post("/view/")
 async def view(message: Message):
     cur = message.cur
-    return list_list[cur] # 返回当前节点的对话记录
+    listclone=copy.deepcopy(list_list[cur])
+    listclone.pop(0)
+    return listclone 
 
 @app.post("/aichat/")
 async def get_response(message: Message):
