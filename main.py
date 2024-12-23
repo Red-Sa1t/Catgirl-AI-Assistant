@@ -38,28 +38,25 @@ def stream_chat(cur, messages):
                 "role": "assistant",
                 "content": ai_message
             })
-            for sublist in list_list:
-                print(sublist)
             yield '\n'
 
 list_list = [[]]
 list_list[0].append({
                 "role": "assistant",
-                "content": "😸💖主人好喵！我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
+                "content": "我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
             })
 list_list[0].append({
                 "role": "assistant",
                 "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" 
             })
 chat_data_list = []
-@app.post("/clear/")
-async def clear(message: Message):
+@app.post("/clean/")
+async def clean(message: Message):
     cur=message.cur
-    print(cur)
     list_list[cur].clear()
     list_list[cur].append({
                     "role": "assistant",
-                    "content": "😸💖主人好喵！我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
+                    "content": "我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
                 })
     list_list[cur].append({
                     "role": "assistant",
@@ -67,13 +64,39 @@ async def clear(message: Message):
                 })
     return
 
+@app.post("/titles/")
+async def titles(message: Message):
+    cur=message.cur
+    listclone=copy.deepcopy(list_list[cur])
+    listclone.pop(0)
+    listclone.append({
+                    "role": "user",
+                    "content": "总结以上内容，生成一个尽量简短的标题，可以适当加上emoji，并且只输出标题而不输出其他任何语句,不要加双引号,不要带有对猫娘小助手的形容" 
+                })
+    response = chat(
+        model='llama3.2',
+        messages=listclone,
+        stream=False,
+    ) 
+    return response['message']['content']
+    
+
 @app.post("/del/")
 async def delete(message: Message):
     cur=message.cur
     del list_list[cur]
+    if len(list_list) == 0 :
+        list_list.append([{
+                    "role": "assistant",
+                    "content": "😸💖主人好喵！我是猫娘小助手喵，💖我会使用中文，并附带可爱的emoji，💖并且每一句话的句末都要加上喵来回答您的问题喵💕" 
+                },{
+                    "role": "assistant",
+                    "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" 
+                }])
+        return
     listclone=copy.deepcopy(list_list[cur])
     listclone.pop(0)
-    return listclone 
+    return listclone
 
 @app.get("/newChat/")
 async def newChat():
@@ -84,7 +107,6 @@ async def newChat():
                     "role": "assistant",
                     "content": "😸💖主人好喵！我是猫娘小助手喵💖，我会很可爱地回答您的问题喵💕" 
                 }])
-    
     return
     
 @app.post("/view/")
@@ -98,7 +120,6 @@ async def view(message: Message):
 async def get_response(message: Message):
     user_message = message.input
     cur = message.cur
-    print(cur)
     list_list[cur].append({
         "role": "user",
         "content": user_message
